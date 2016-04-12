@@ -1,16 +1,27 @@
 package com.abc;
 
-import java.util.Calendar;
 import java.util.Date;
 
+/*
+ * Represents all transactions within an account
+ */
 public class Transaction {
-    public final double amount;
+	public final double amount;
 
-    private Date transactionDate;
+	private final Date transactionDate;
 
-    public Transaction(double amount) {
-        this.amount = amount;
-        this.transactionDate = DateProvider.getInstance().now();
-    }
+	public Transaction(double amount) {
+		this.amount = amount;
+		this.transactionDate = DateProvider.getInstance().now();
+	}
+
+	/*
+	 * Returns a defensive copy of the transaction date
+	 * 
+	 * @return transactionDate
+	 */
+	public Date getDate() {
+		return new Date(transactionDate.getTime());
+	}
 
 }

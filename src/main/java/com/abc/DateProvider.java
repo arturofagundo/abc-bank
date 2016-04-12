@@ -4,15 +4,32 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class DateProvider {
-    private static DateProvider instance = null;
+	// Moved to eager initialization to avoid thread synchronization issues
+	// associated with lazy initialization
+	private static DateProvider instance = new DateProvider();
 
-    public static DateProvider getInstance() {
-        if (instance == null)
-            instance = new DateProvider();
-        return instance;
-    }
+	/*
+	 * Enforce singleton property with a private constructor
+	 */
+	private DateProvider() {
 
-    public Date now() {
-        return Calendar.getInstance().getTime();
-    }
+	}
+
+	/*
+	 * Return singleton instance of DateProvider object
+	 * 
+	 * @return instance
+	 */
+	public static DateProvider getInstance() {
+		return instance;
+	}
+
+	/*
+	 * Get current time
+	 * 
+	 * @return current time
+	 */
+	public Date now() {
+		return Calendar.getInstance().getTime();
+	}
 }
