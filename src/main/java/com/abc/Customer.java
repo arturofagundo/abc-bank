@@ -27,8 +27,13 @@ public class Customer {
 	 * @param account new account to be associated with this customer
 	 * 
 	 * @return customer object
+	 * 
+	 * @throws null pointer exception if null account is specified
 	 */
 	public Customer openAccount(Account account) {
+		if (account == null) {
+			throw new NullPointerException();
+		}
 		synchronized (accounts) {
 			accounts.add(account);
 		}
@@ -102,7 +107,7 @@ public class Customer {
 		double total = 0.0;
 		List<Transaction> transactions = a.getTransactions();
 		for (Transaction t : transactions) {
-			s += "  " + (t.amount < 0 ? "withdrawal" : "deposit") + " " + toDollars(t.amount) + "\n";
+			s += "  " + t.getDescription() + " " + toDollars(t.amount) + "\n";
 			total += t.amount;
 		}
 		s += "Total " + toDollars(total);
@@ -111,5 +116,54 @@ public class Customer {
 
 	private String toDollars(double d) {
 		return String.format("$%,.2f", abs(d));
+	}
+
+	/*
+	 * Transfer from one account to the other.
+	 * 
+	 * @param srcAccount source of transfer
+	 * 
+	 * @param destAccount destination for transfer
+	 * 
+	 * @param amount dollar amount to transfer
+	 * 
+	 * @throws NullPointerException if the source or destination accounts are
+	 * null
+	 * 
+	 * @throws IllegalStateException of the source account does not have
+	 * sufficient funds
+	 * 
+	 * @throws IllegalArgumentException if the source or destination accounts
+	 * are not associated with thsi customer
+	 */
+	public void transfer(Account srcAccount, Account destAccount, int amount) {
+		if (srcAccount == null || destAccount == null) {
+			throw new NullPointerException();
+		}
+
+		synchronized (accounts) {
+			boolean foundSource = false, foundDest = false;
+			for (Account account : accounts) {
+				if (account.getAccountNumber() == srcAccount.getAccountNumber()) {
+					foundSource = true;
+				} else if (account.getAccountNumber() == destAccount.getAccountNumber()) {
+					foundDest = true;
+				}
+				if (foundSource && foundDest)
+					break;
+			}
+
+			if (!foundSource || !foundDest) {
+				throw new IllegalArgumentException();
+			}
+
+			if (srcAccount.sumTransactions() < amount) {
+				throw new IllegalStateException();
+			}
+
+			srcAccount.withdraw(amount, "transfer to " + destAccount.getAccountNumber());
+			destAccount.deposit(amount, "transfer from " + srcAccount.getAccountNumber());
+		}
+
 	}
 }

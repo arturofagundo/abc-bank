@@ -58,4 +58,22 @@ public class AccountTest {
 
 		checkingAccount.deposit(-50);
 	}
+
+	@Test
+	public final void testAccountNumber() {
+		Account account1 = new Account(Account.Type.CHECKING);
+		Account account2 = new Account(Account.Type.SAVINGS);
+		assertEquals(account1.getAccountNumber() + 1, account2.getAccountNumber());
+	}
+
+	@Test
+	public final void testTransfer() {
+		Account checkingAccount = new Account(Account.Type.CHECKING);
+		Account savingsAccount = new Account(Account.Type.SAVINGS);
+		checkingAccount.deposit(100, "deposit");
+		checkingAccount.withdraw(50, "transfer to " + savingsAccount.getAccountNumber());
+		savingsAccount.deposit(50, "transfer from " + checkingAccount.getAccountNumber());
+		assertEquals(checkingAccount.sumTransactions(), 50, DOUBLE_DELTA);
+		assertEquals(savingsAccount.sumTransactions(), 50, DOUBLE_DELTA);
+	}
 }

@@ -25,6 +25,8 @@ public class Account {
 
 	private final Type accountType;
 	private List<Transaction> transactions;
+	private final int accountNumber;
+	private static Integer nextAccountNumber = 1;
 
 	/*
 	 * Returns a defensive copy of the list of transactions
@@ -40,6 +42,10 @@ public class Account {
 	public Account(Type accountType) {
 		this.accountType = accountType;
 		this.transactions = new ArrayList<Transaction>();
+		synchronized (nextAccountNumber) {
+			accountNumber = nextAccountNumber;
+			nextAccountNumber++;
+		}
 	}
 
 	/*
@@ -72,6 +78,44 @@ public class Account {
 		} else {
 			synchronized (transactions) {
 				transactions.add(new Transaction(-amount));
+			}
+		}
+	}
+
+	/*
+	 * Deposit with description
+	 * 
+	 * @param amount Dollar value of deposit
+	 * 
+	 * @param description of deposit
+	 * 
+	 * @throws IllegalArgumentException if the amount is negative
+	 */
+	public void deposit(double amount, String description) {
+		if (amount <= 0) {
+			throw new IllegalArgumentException("amount must be greater than zero");
+		} else {
+			synchronized (transactions) {
+				transactions.add(new Transaction(amount, description));
+			}
+		}
+	}
+
+	/*
+	 * Withdrawal with description
+	 * 
+	 * @param amount Dollar value of withdrawal
+	 * 
+	 * @param description of withdrawal
+	 * 
+	 * @throws IllegalArgumentException if the amount is negative
+	 */
+	public void withdraw(double amount, String description) {
+		if (amount <= 0) {
+			throw new IllegalArgumentException("amount must be greater than zero");
+		} else {
+			synchronized (transactions) {
+				transactions.add(new Transaction(-amount, description));
 			}
 		}
 	}
@@ -119,4 +163,12 @@ public class Account {
 		return accountType;
 	}
 
+	/*
+	 * Return unique account number
+	 * 
+	 * @returns account number
+	 */
+	public int getAccountNumber() {
+		return accountNumber;
+	}
 }
