@@ -135,11 +135,8 @@ public class Account {
 			else
 				return 1 + (amount - 1000) * 0.002;
 		case MAXI_SAVINGS:
-			if (amount <= 1000)
-				return amount * 0.02;
-			if (amount <= 2000)
-				return 20 + (amount - 1000) * 0.05;
-			return 70 + (amount - 2000) * 0.1;
+			if (qualifiesForHigherInterestRate())
+				return amount * 0.05;
 		default:
 			return amount * 0.001;
 		}
@@ -170,5 +167,22 @@ public class Account {
 	 */
 	public int getAccountNumber() {
 		return accountNumber;
+	}
+
+	private boolean qualifiesForHigherInterestRate() {
+		boolean result = true;
+		if (!transactions.isEmpty()) {
+			for (int i = transactions.size() - 1; i >= 0; i--) {
+				if (transactions.get(i).amount < 0) {
+					// Found withdrawal. Now calculate time since this
+					// transaction.
+					if (DateProvider.getInstance().daysSince(transactions.get(i).getDate()) < 10) {
+						result = false;
+					}
+					break;
+				}
+			}
+		}
+		return result;
 	}
 }

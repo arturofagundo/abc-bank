@@ -33,7 +33,10 @@ public class AccountTest {
 		assertEquals(maxiSavingsAccount.getAccountType(), Account.Type.MAXI_SAVINGS);
 
 		maxiSavingsAccount.deposit(3000.0);
-		assertEquals(170.0, maxiSavingsAccount.interestEarned(), DOUBLE_DELTA);
+		assertEquals(3000.0 * 0.05, maxiSavingsAccount.interestEarned(), DOUBLE_DELTA);
+
+		maxiSavingsAccount.withdraw(1);
+		assertEquals(2999.0 * 0.001, maxiSavingsAccount.interestEarned(), DOUBLE_DELTA);
 	}
 
 	@Test

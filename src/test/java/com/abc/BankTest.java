@@ -47,13 +47,15 @@ public class BankTest {
 		henry.openAccount(maxiSavingsAccount);
 
 		maxiSavingsAccount.deposit(3000.0);
+		maxiSavingsAccount.withdraw(1);
+		maxiSavingsAccount.deposit(1);
 		savingsAccount.deposit(1500.0);
 		checkingAccount.deposit(100.0);
 
 		bank.addCustomer(bill);
 		bank.addCustomer(henry);
 
-		assertEquals((0.1 + 2.0 + 170) * 2, bank.totalInterestPaid(), DOUBLE_DELTA);
+		assertEquals((0.1 + 2.0) * 2 + 3000 * 0.05 + 3000 * 0.001, bank.totalInterestPaid(), DOUBLE_DELTA);
 	}
 
 	@Test
