@@ -1,6 +1,7 @@
 package com.abc;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /*
@@ -127,19 +128,116 @@ public class Account {
 	 * @return the dollar amount of all interest earned on this account.
 	 */
 	public double interestEarned() {
-		double amount = sumTransactions();
 		switch (accountType) {
 		case SAVINGS:
-			if (amount <= 1000)
-				return amount * 0.001;
-			else
-				return 1 + (amount - 1000) * 0.002;
+			return savingsInterestEarned();
 		case MAXI_SAVINGS:
-			if (qualifiesForHigherInterestRate())
-				return amount * 0.05;
+			return maxiSavingsInterestEarned();
 		default:
-			return amount * 0.001;
+			return checkingInterestEarned();
 		}
+	}
+
+	private double savingsInterestEarned() {
+		if (transactions.isEmpty())
+			return 0;
+
+		double lowBalAPR = 0.001;
+		double highBalAPR = 0.002;
+		Iterator<Transaction> transactionIterator = transactions.iterator();
+		Transaction currTransaction = transactionIterator.next();
+		double currBalance = currTransaction.amount;
+		int daysOfAccumInterest;
+		while (transactionIterator.hasNext()) {
+			Transaction nextTransaction = transactionIterator.next();
+			daysOfAccumInterest = DateProvider.getInstance().daysSince(currTransaction.getDate(), nextTransaction.getDate());
+			for (int i = 0; i < daysOfAccumInterest; i++) {
+				if (currBalance < 1000) {
+					currBalance = currBalance * (1 + lowBalAPR / 365);
+				} else {
+					currBalance = 1000 * (1 + lowBalAPR / 365) + (currBalance - 1000) * (1 + highBalAPR / 365);
+				}
+			}
+			currTransaction = nextTransaction;
+			currBalance += currTransaction.amount;
+		}
+
+		daysOfAccumInterest = DateProvider.getInstance().daysSince(currTransaction.getDate());
+		for (int i = 0; i < daysOfAccumInterest; i++) {
+			if (currBalance < 1000) {
+				currBalance = currBalance * (1 + lowBalAPR / 365);
+			} else {
+				currBalance = 1000 * (1 + lowBalAPR / 365) + (currBalance - 1000) * (1 + highBalAPR / 365);
+			}
+		}
+		double amount = sumTransactions();
+		return currBalance - amount;
+	}
+
+	private double maxiSavingsInterestEarned() {
+		double lowAPR = 0.001;
+		double highAPR = 0.05;
+		Iterator<Transaction> transactionIterator = transactions.iterator();
+		Transaction currTransaction = transactionIterator.next();
+		double currBalance = currTransaction.amount;
+		int daysOfAccumInterest;
+		int daysOfLowAPR = 0;
+		while (transactionIterator.hasNext()) {
+			Transaction nextTransaction = transactionIterator.next();
+			daysOfAccumInterest = DateProvider.getInstance().daysSince(currTransaction.getDate(), nextTransaction.getDate());
+			for (int i = 0; i < daysOfAccumInterest; i++) {
+				if (daysOfLowAPR > 0) {
+					currBalance = currBalance * (1 + lowAPR / 365);
+					daysOfLowAPR--;
+				} else {
+					currBalance = currBalance * (1 + highAPR / 365);
+				}
+			}
+			currTransaction = nextTransaction;
+			if (currTransaction.amount < 0) {
+				daysOfLowAPR = 10;
+			}
+			currBalance += currTransaction.amount;
+		}
+
+		daysOfAccumInterest = DateProvider.getInstance().daysSince(currTransaction.getDate());
+		for (int i = 0; i < daysOfAccumInterest; i++) {
+			if (daysOfLowAPR > 0) {
+				currBalance = currBalance * (1 + lowAPR / 365);
+				daysOfLowAPR--;
+			} else {
+				currBalance = currBalance * (1 + highAPR / 365);
+			}
+		}
+		double amount = sumTransactions();
+		return currBalance - amount;
+	}
+
+	/*
+	 * Assume all transactions end in the past. Assume customer is well-behaved
+	 * and never allows his balance to go below 0.
+	 */
+	private double checkingInterestEarned() {
+		if (transactions.isEmpty())
+			return 0;
+
+		double checkingAPR = 0.001;
+		Iterator<Transaction> transactionIterator = transactions.iterator();
+		Transaction currTransaction = transactionIterator.next();
+		double currBalance = currTransaction.amount;
+		int daysOfAccumInterest;
+		while (transactionIterator.hasNext()) {
+			Transaction nextTransaction = transactionIterator.next();
+			daysOfAccumInterest = DateProvider.getInstance().daysSince(currTransaction.getDate(), nextTransaction.getDate());
+			currBalance *= Math.pow(1 + checkingAPR / 365, daysOfAccumInterest);
+			currTransaction = nextTransaction;
+			currBalance += currTransaction.amount;
+		}
+
+		daysOfAccumInterest = DateProvider.getInstance().daysSince(currTransaction.getDate());
+		currBalance *= Math.pow(1 + checkingAPR / 365, daysOfAccumInterest);
+		double amount = sumTransactions();
+		return currBalance - amount;
 	}
 
 	/*
@@ -167,22 +265,5 @@ public class Account {
 	 */
 	public int getAccountNumber() {
 		return accountNumber;
-	}
-
-	private boolean qualifiesForHigherInterestRate() {
-		boolean result = true;
-		if (!transactions.isEmpty()) {
-			for (int i = transactions.size() - 1; i >= 0; i--) {
-				if (transactions.get(i).amount < 0) {
-					// Found withdrawal. Now calculate time since this
-					// transaction.
-					if (DateProvider.getInstance().daysSince(transactions.get(i).getDate()) < 10) {
-						result = false;
-					}
-					break;
-				}
-			}
-		}
-		return result;
 	}
 }

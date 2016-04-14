@@ -4,10 +4,25 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 public class BankTest {
 	private static final double DOUBLE_DELTA = 1e-15;
+
+	@Mock
+	Customer mockHenry;
+
+	@Mock
+	Customer mockBill;
+
+	@Before
+	public void setupMock() {
+		mockHenry = Mockito.mock(Customer.class);
+		mockBill = Mockito.mock(Customer.class);
+	}
 
 	@Test
 	public void customerSummary() {
@@ -22,40 +37,13 @@ public class BankTest {
 	@Test
 	public void testTotalInterestPaid() {
 		Bank bank = new Bank();
-		Account checkingAccount = new Account(Account.Type.CHECKING);
-		Customer bill = new Customer("Bill");
-		bill.openAccount(checkingAccount);
 
-		Account savingsAccount = new Account(Account.Type.SAVINGS);
-		bill.openAccount(savingsAccount);
+		Mockito.when(mockHenry.totalInterestEarned()).thenReturn(100.0);
+		Mockito.when(mockBill.totalInterestEarned()).thenReturn(50.0);
+		bank.addCustomer(mockBill);
+		bank.addCustomer(mockHenry);
 
-		Account maxiSavingsAccount = new Account(Account.Type.MAXI_SAVINGS);
-		bill.openAccount(maxiSavingsAccount);
-
-		maxiSavingsAccount.deposit(3000.0);
-		savingsAccount.deposit(1500.0);
-		checkingAccount.deposit(100.0);
-
-		Customer henry = new Customer("Henry");
-		checkingAccount = new Account(Account.Type.CHECKING);
-		henry.openAccount(checkingAccount);
-
-		savingsAccount = new Account(Account.Type.SAVINGS);
-		henry.openAccount(savingsAccount);
-
-		maxiSavingsAccount = new Account(Account.Type.MAXI_SAVINGS);
-		henry.openAccount(maxiSavingsAccount);
-
-		maxiSavingsAccount.deposit(3000.0);
-		maxiSavingsAccount.withdraw(1);
-		maxiSavingsAccount.deposit(1);
-		savingsAccount.deposit(1500.0);
-		checkingAccount.deposit(100.0);
-
-		bank.addCustomer(bill);
-		bank.addCustomer(henry);
-
-		assertEquals((0.1 + 2.0) * 2 + 3000 * 0.05 + 3000 * 0.001, bank.totalInterestPaid(), DOUBLE_DELTA);
+		assertEquals(150.0, bank.totalInterestPaid(), DOUBLE_DELTA);
 	}
 
 	@Test
